@@ -7,6 +7,7 @@ import * as jwt from "jsonwebtoken";
 import { productRouter } from "./routes/product.routes";
 import { productVariantRouter } from "./routes/productVariant.routes";
 import { userRouter } from "./routes/user.routes";
+import { WebSocketServer } from "ws"; // Import ws
 
 dotenv.config();
 
@@ -44,9 +45,27 @@ connectToDatabase(ATLAS_URI).then(()=>{
     
     
     //start the Express Server
-    app.listen(5200,()=>{
+    const server = app.listen(5200,()=>{
         console.log("Server started running on http://localhost:5200")
     })
+    const wss = new WebSocketServer({ server });
+
+    wss.on("connection", (ws) => {
+        console.log("New WebSocket connection");
+
+        // Handle incoming messages
+        ws.on("message", (message) => {
+            console.log("Received message:", message);
+            // Echo the message back to the client
+            ws.send(`Server received: ${message}`);
+        });
+
+        // Handle disconnection
+        ws.on("close", () => {
+            console.log("WebSocket connection closed");
+        });
+    });
+
 }).catch((err)=>{
     console.error(err)
 })
